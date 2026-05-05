@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔥 FOGO & ÁGUA 💧 - Templo dos Inimigos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: #000;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* Header com personagens */
+        .character-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            pointer-events: auto;
+        }
+        
+        .char-card {
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 12px 20px;
+            text-align: center;
+            flex: 1;
+            border: 2px solid;
+            transition: all 0.3s;
+        }
+        
+        .char-card.fire {
+            border-color: #ff6600;
+            box-shadow: 0 0 15px rgba(255,102,0,0.3);
+        }
+        
+        .char-card.water {
+            border-color: #3399ff;
+            box-shadow: 0 0 15px rgba(51,153,255,0.3);
+        }
+        
+        .char-card.active {
+            transform: scale(1.05);
+            background: rgba(0,0,0,0.95);
+        }
+        
+        .char-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .fire .char-name { color: #ff8844; }
+        .water .char-name { color: #44aaff; }
+        
+        .char-stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 14px;
+        }
+        
+        .health-bar {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .health-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .fire .health-fill { background: linear-gradient(90deg, #ff6600, #ffaa44); }
+        .water .health-fill { background: linear-gradient(90deg, #3399ff, #66ccff); }
+        
+        /* Objetivos */
+        .objectives {
+            position: absolute;
+            top: 120px;
+            left: 15px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 10px 15px;
+            border-left: 3px solid #ffd700;
+            pointer-events: auto;
+        }
+        
+        .objectives p {
+            color: white;
+            font-size: 12px;
+            margin: 3px 0;
+        }
+        
+        .objectives .title {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        /* Botões de troca */
+        .swap-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6600, #3399ff);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            cursor: pointer;
+            pointer-events: auto;
+            transition: transform 0.2s;
+            z-index: 2000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .swap-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Controles touch */
+        .touch-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
+        
+        .touch-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .touch-btn:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.95);
+        }
+        
+        .dpad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .dpad-row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        
+        .message {
+            position: absolute;
+            bottom: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            white-space: nowrap;
+            animation: fadeOut 2s forwards;
+            pointer-events: none;
+            z-index: 2000;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateX(-50%) scale(1); }
+            70% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(-50%) scale(1.1); visibility: hidden; }
+        }
+        
+        .damage-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: flash 0.3s;
+            pointer-events: none;
+            z-index: 1500;
+        }
+        
+        @keyframes flash {
+            0% { background: rgba(255,0,0,0); }
+            50% { background: rgba(255,0,0,0.4); }
+            100% { background: rgba(255,0,0,0); }
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            z-index: 10000;
+        }
+        
+        .loader {
+            width: 200px;
+            height: 3px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .loader-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #3399ff);
+            animation: loading 1s ease;
+        }
+        
+        @keyframes loading {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            z-index: 5000;
+            border: 2px solid #ff4444;
+            min-width: 280px;
+        }
+        
+        .game-over h1 { color: #ff4444; font-size: 36px; margin-bottom: 15px; }
+        .game-over button {
+            background: linear-gradient(135deg, #ff6600, #3399ff);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            color: white;
+            font-size: 16px;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 600px) {
+            .char-name { font-size: 14px; }
+            .char-stats { font-size: 11px; gap: 10px; }
+            .swap-btn { padding: 12px 24px; font-size: 14px; bottom: 100px; }
+            .touch-btn { width: 50px; height: 50px; font-size: 22px; }
+        }
+        
+        @media (min-width: 601px) {
+            .touch-controls { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h2>🔥 FOGO & ÁGUA 💧</h2>
+        <div class="loader"><div class="loader-fill"></div></div>
+        <p>Carregando Templo dos Inimigos...</p>
+    </div>
+
+    <div id="ui" style="display: none;">
+        <div class="character-panel">
+            <div class="char-card fire" id="fireCard">
+                <div class="char-name">🔥 GUERREIRO DE FOGO</div>
+                <div class="char-stats">
+                    <span>❤️ <span id="fireHealth">100</span>%</span>
+                    <span>⭐ <span id="fireGems">0</span></span>
+                </div>
+                <div class="health-bar"><div class="health-fill" id="fireHealthFill"></div></div>
+            </div>
+            <div class="char-card water" id="waterCard">
+                <div class="char-name">💧 GUERREIRA DE ÁGUA</div>
+                <div class="char-stats">
+                    <span>❤️ <span id="waterHealth">100</span>%</span>
+                    <span>⭐ <span id="waterGems">0</span></span>
+                </div>
+                <div class="health-bar"><div class="health-fill" id="waterHealthFill"></div></div>
+            </div>
+        </div>
+        
+        <div class="objectives">
+            <div class="title">🎯 MISSÃO</div>
+            <p>🔴🔥 Fogo coleta gemas <span style="color:#ff8844">VERMELHAS</span></p>
+            <p>🔵💧 Água coleta gemas <span style="color:#44aaff">AZUIS</span></p>
+            <p>🚪 Ative botões para abrir portas</p>
+            <p>👹 Fuja dos inimigos!</p>
+        </div>
+        
+        <button class="swap-btn" id="swapBtn">🔄 TROCAR PERSONAGEM (TAB)</button>
+        
+        <!-- Controles Touch -->
+        <div class="touch-controls">
+            <div class="dpad">
+                <div class="dpad-row">
+                    <div class="touch-btn" id="btnUp">▲</div>
+                </div>
+                <div class="dpad-row">
+                    <div class="touch-btn" id="btnLeft">◀</div>
+                    <div class="touch-btn" id="btnDown">▼</div>
+                    <div class="touch-btn" id="btnRight">▶</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // ========== DETECTAR DISPOSITIVO ==========
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // ========== INICIALIZAÇÃO 3D ==========
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a2a);
+        scene.fog = new THREE.FogExp2(0x0a0a2a, 0.01);
+
+        const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(10, 12, 15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // ========== LUZES ==========
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.2);
+        dirLight.position.set(5, 12, 4);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+        
+        const fireLight = new THREE.PointLight(0xff4400, 0.5, 15);
+        scene.add(fireLight);
+        
+        const waterLight = new THREE.PointLight(0x3399ff, 0.5, 15);
+        scene.add(waterLight);
+
+        // ========== CHÃO ==========
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(24, 24),
+            new THREE.MeshStandardMaterial({ color: 0x2a1a0a, roughness: 0.7 })
+        );
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.5;
+        ground.receiveShadow = true;
+        scene.add(ground);
+        
+        const grid = new THREE.GridHelper(24, 20, 0xaa8866, 0x664422);
+        grid.position.y = -0.45;
+        scene.add(grid);
+        
+        // Decoração do templo
+        const templeMat = new THREE.MeshStandardMaterial({ color: 0xccaa77, metalness: 0.3 });
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 3, 8), templeMat);
+            pillar.position.set(Math.cos(angle) * 9, 1, Math.sin(angle) * 9);
+            pillar.castShadow = true;
+            scene.add(pillar);
+        }
+
+        // ========== CLASSE DO PERSONAGEM ==========
+        class Character {
+            constructor(x, z, color, type) {
+                this.type = type; // 'fire' ou 'water'
+                this.x = x;
+                this.z = z;
+                this.health = 100;
+                this.gems = 0;
+                this.active = false;
+                
+                const group = new THREE.Group();
+                
+                // Corpo
+                const bodyMat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.2 });
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.4, 0.9, 16), bodyMat);
+                body.castShadow = true;
+                body.position.y = 0.45;
+                group.add(body);
+                
+                // Cabeça
+                const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), headMat);
+                head.position.y = 0.9;
+                head.castShadow = true;
+                group.add(head);
+                
+                // Olhos
+                const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+                const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), eyeMat);
+                leftEye.position.set(-0.13, 0.98, 0.42);
+                const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), eyeMat);
+                rightEye.position.set(0.13, 0.98, 0.42);
+                group.add(leftEye, rightEye);
+                
+                // Elemento visual (chama/gota)
+                const elementMat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
+                const element = type === 'fire' 
+                    ? new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.4, 8), elementMat)
+                    : new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), elementMat);
+                element.position.y = 1.15;
+                group.add(element);
+                
+                group.position.set(x, 0, z);
+                scene.add(group);
+                this.mesh = group;
+                this.speed = 4.5;
+            }
+            
+            update(delta, moveX, moveZ, walls, doors, enemies, otherChar, lavaZones, waterZones, buttons, portal) {
+                if (this.health <= 0) return false;
+                
+                let newX = this.x + moveX * this.speed * delta;
+                let newZ = this.z + moveZ * this.speed * delta;
+                const size = 0.35;
+                
+                // Colisão com paredes
+                let canX = true, canZ = true;
+                for (let w of walls) {
+                    if (Math.abs(newX - w.x) < size + w.sizeX && Math.abs(this.z - w.z) < size + w.sizeZ) canX = false;
+                    if (Math.abs(this.x - w.x) < size + w.sizeX && Math.abs(newZ - w.z) < size + w.sizeZ) canZ = false;
+                }
+                
+                // Colisão com portas fechadas
+                for (let d of doors) {
+                    if (!d.isOpen) {
+                        if (Math.abs(newX - d.x) < size + 0.4 && Math.abs(this.z - d.z) < size + 0.4) canX = false;
+                        if (Math.abs(this.x - d.x) < size + 0.4 && Math.abs(newZ - d.z) < size + 0.4) canZ = false;
+                    }
+                }
+                
+                // Colisão com outro personagem
+                if (otherChar && otherChar.health > 0) {
+                    if (Math.abs(newX - otherChar.x) < size + 0.35 && Math.abs(this.z - otherChar.z) < size + 0.35) canX = false;
+                    if (Math.abs(this.x - otherChar.x) < size + 0.35 && Math.abs(newZ - otherChar.z) < size + 0.35) canZ = false;
+                }
+                
+                if (canX) this.x = newX;
+                if (canZ) this.z = newZ;
+                
+                this.mesh.position.x = this.x;
+                this.mesh.position.z = this.z;
+                
+                if (moveX !== 0 || moveZ !== 0) {
+                    this.mesh.rotation.y = Math.atan2(moveX, moveZ);
+                }
+                
+                // Animações
+                this.mesh.position.y = Math.sin(Date.now() * 0.008) * 0.03;
+                
+                // Verificar zonas de perigo
+                if (this.type === 'fire') {
+                    for (let water of waterZones) {
+                        if (Math.hypot(this.x - water.x, this.z - water.z) < 0.6) {
+                            this.takeDamage(5);
+                            return true;
+                        }
+                    }
+                } else {
+                    for (let lava of lavaZones) {
+                        if (Math.hypot(this.x - lava.x, this.z - lava.z) < 0.6) {
+                            this.takeDamage(5);
+                            return true;
+                        }
+                    }
+                }
+                
+                // Verificar gemas
+                for (let gem of gems) {
+                    if (!gem.collected && gem.type === this.type) {
+                        if (Math.hypot(this.x - gem.x, this.z - gem.z) < 0.6) {
+                            gem.collect();
+                            this.gems++;
+                            updateUI();
+                            showMessage(`${this.type === 'fire' ? '🔥' : '💧'} +1 Gema!`, '#ffd700');
+                        }
+                    }
+                }
+                
+                // Verificar botões
+                for (let btn of buttons) {
+                    if (!btn.pressed && Math.hypot(this.x - btn.x, this.z - btn.z) < 0.6) {
+                        btn.activate();
+                        showMessage(`🔘 Botão ${btn.id + 1} ativado!`, '#ffd700');
+                    }
+                }
+                
+                // Verificar portal
+                if (portal.active && !levelComplete && 
+                    Math.hypot(this.x - portal.x, this.z - portal.z) < 0.8 &&
+                    gems.filter(g => !g.collected).length === 0) {
+                    completeLevel();
+                }
+                
+                return true;
+            }
+            
+            takeDamage(amount) {
+                this.health = Math.max(0, this.health - amount);
+                updateUI();
+                
+                const flash = document.createElement('div');
+                flash.className = 'damage-flash';
+                document.body.appendChild(flash);
+                setTimeout(() => flash.remove(), 300);
+                
+                return this.health <= 0;
+            }
+            
+            getPosition() { return { x: this.x, z: this.z }; }
+        }
+
+        // ========== CLASSE DO INIMIGO ==========
+        class Enemy {
+            constructor(x, z, color, targetType, speed) {
+                this.x = x;
+                this.z = z;
+                this.targetType = targetType; // 'fire' ou 'water'
+                this.speed = speed;
+                this.active = true;
+                
+                const group = new THREE.Group();
+                const bodyMat = new THREE.MeshStandardMaterial({ color: color, metalness: 0.5 });
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.4, 0.8, 8), bodyMat);
+                body.castShadow = true;
+                group.add(body);
+                
+                const eyeMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x440000 });
+                const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+                leftEye.position.set(-0.15, 0.5, 0.35);
+                const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), eyeMat);
+                rightEye.position.set(0.15, 0.5, 0.35);
+                group.add(leftEye, rightEye);
+                
+                group.position.set(x, 0, z);
+                scene.add(group);
+                this.mesh = group;
+                this.patrolAngle = Math.random() * Math.PI * 2;
+            }
+            
+            update(targetPos, delta, level) {
+                if (!this.active || !targetPos) return;
+                
+                const dx = targetPos.x - this.x;
+                const dz = targetPos.z - this.z;
+                const dist = Math.hypot(dx, dz);
+                const chaseRange = 5 + level * 0.5;
+                
+                if (dist < chaseRange) {
+                    const angle = Math.atan2(dz, dx);
+                    this.x += Math.cos(angle) * this.speed * delta;
+                    this.z += Math.sin(angle) * this.speed * delta;
+                    this.mesh.rotation.y = angle;
+                } else {
+                    this.patrolAngle += delta * 1.5;
+                    this.x = this.originalX + Math.cos(this.patrolAngle) * 2;
+                    this.z = this.originalZ + Math.sin(this.patrolAngle * 0.7) * 2;
+                }
+                
+                this.x = Math.max(-9, Math.min(9, this.x));
+                this.z = Math.max(-9, Math.min(9, this.z));
+                this.mesh.position.x = this.x;
+                this.mesh.position.z = this.z;
+                this.mesh.position.y = Math.sin(Date.now() * 0.008) * 0.05;
+                
+                this.originalX = this.originalX || this.x;
+                this.originalZ = this.originalZ || this.z;
+            }
+            
+            getPosition() { return { x: this.x, z: this.z }; }
+        }
+
+        // ========== GEMMA ==========
+        class Gem {
+            constructor(x, z, type, color) {
+                this.x = x;
+                this.z = z;
+                this.type = type;
+                this.collected = false;
+                
+                const geometry = new THREE.OctahedronGeometry(0.25);
+                const material = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.3 });
+                this.mesh = new THREE.Mesh(geometry, material);
+                this.mesh.position.set(x, 0.2, z);
+                this.mesh.castShadow = true;
+                scene.add(this.mesh);
+            }
+            
+            collect() {
+                this.collected = true;
+                scene.remove(this.mesh);
+            }
+        }
+
+        // ========== BOTÃO ==========
+        class PressureButton {
+            constructor(x, z, id, doorIds) {
+                this.x = x;
+                this.z = z;
+                this.id = id;
+                this.doorIds = doorIds;
+                this.pressed = false;
+                
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.45, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0x666666 }));
+                base.position.set(x, 0.05, z);
+                scene.add(base);
+                
+                this.btnMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.15, 16), new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 }));
+                this.btnMesh.position.set(x, 0.15, z);
+                scene.add(this.btnMesh);
+                
+                this.ring = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.05, 16, 32), new THREE.MeshStandardMaterial({ color: 0xffaa44 }));
+                this.ring.position.set(x, 0.08, z);
+                this.ring.rotation.x = Math.PI / 2;
+                scene.add(this.ring);
+            }
+            
+            activate() {
+                if (this.pressed) return;
+                this.pressed = true;
+                this.btnMesh.position.y = 0.08;
+                this.btnMesh.material.color.setHex(0x44ff44);
+                this.ring.material.color.setHex(0x44ff44);
+            }
+        }
+
+        // ========== CONFIGURAÇÃO DO NÍVEL ==========
+        const walls = [];
+        const doors = [];
+        const lavaZones = [];
+        const waterZones = [];
+        let gems = [];
+        let buttons = [];
+        let enemies = [];
+        let portal = null;
+        
+        let fireCharacter, waterCharacter;
+        let activeCharacter = 'fire';
+        let currentLevel = 1;
+        let levelComplete = false;
+        let gameActive = true;
+        let gameTime = 0;
+        let timerInterval;
+        
+        // Controles
+        const keys = { up: false, down: false, left: false, right: false };
+        let useTouch = false;
+        const touchState = { up: false, down: false, left: false, right: false };
+        
+        // ========== CONSTRUIR CENÁRIO ==========
+        function buildLevel() {
+            // Limpar anteriores
+            walls.forEach(w => scene.remove(w.mesh));
+            walls.length = 0;
+            doors.forEach(d => scene.remove(d.mesh));
+            doors.length = 0;
+            lavaZones.forEach(l => scene.remove(l.mesh));
+            lavaZones.length = 0;
+            waterZones.forEach(w => scene.remove(w.mesh));
+            waterZones.length = 0;
+            gems.forEach(g => scene.remove(g.mesh));
+            gems = [];
+            buttons.forEach(b => { scene.remove(b.btnMesh); scene.remove(b.ring); });
+            buttons = [];
+            enemies.forEach(e => scene.remove(e.mesh));
+            enemies = [];
+            if (portal) { scene.remove(portal.base); scene.remove(portal.ring); }
+            
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.7 });
+            const lavaMat = new THREE.MeshStandardMaterial({ color: 0xff4400, emissive: 0x441100 });
+            const waterMat = new THREE.MeshStandardMaterial({ color: 0x3399ff, emissive: 0x004466, transparent: true, opacity: 0.7 });
+            
+            // Paredes do templo
+            const wallPositions = [
+                { x: 0, z: -9, w: 18, d: 0.3 }, { x: 0, z: 9, w: 18, d: 0.3 },
+                { x: -9, z: 0, w: 0.3, d: 18 }, { x: 9, z: 0, w: 0.3, d: 18 },
+                { x: -4, z: -4, w: 0.3, d: 4 }, { x: 4, z: -3, w: 0.3, d: 5 },
+                { x: -3, z: 4, w: 5, d: 0.3 }, { x: 3, z: 3, w: 5, d: 0.3 },
+                { x: -5, z: 0, w: 3, d: 0.3 }, { x: 2, z: -5, w: 0.3, d: 3 }
+            ];
+            
+            wallPositions.forEach(w => {
+                const wall = new THREE.Mesh(new THREE.BoxGeometry(w.w, 1, w.d), wallMat);
+                wall.position.set(w.x, 0.5, w.z);
+                wall.castShadow = true;
+                scene.add(wall);
+                walls.push({ mesh: wall, x: w.x, z: w.z, sizeX: w.w / 2, sizeZ: w.d / 2 });
+            });
+            
+            // Zonas de lava (perigo para água)
+            const lavaSpots = [
+                { x: -5, z: -5 }, { x: 5, z: -4 }, { x: -4, z: 5 }, { x: 4, z: 4 }
+            ];
+            lavaSpots.forEach(l => {
+                const lava = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.1, 16), lavaMat);
+                lava.position.set(l.x, -0.45, l.z);
+                lava.receiveShadow = true;
+                scene.add(lava);
+                lavaZones.push({ x: l.x, z: l.z, mesh: lava });
+            });
+            
+            // Zonas de água (perigo para fogo)
+            const waterSpots = [
+                { x: -5, z: 4 }, { x: 5, z: 5 }, { x: -4, z: -4 }, { x: 4, z: -5 }
+            ];
+            waterSpots.forEach(w => {
+                const water = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.1, 16), waterMat);
+                water.position.set(w.x, -0.45, w.z);
+                water.receiveShadow = true;
+                scene.add(water);
+                waterZones.push({ x: w.x, z: w.z, mesh: water });
+            });
+            
+            // Gemas
+            const fireGems = [{ x: -6, z: -2 }, { x: 2, z: -6 }, { x: -3, z: 6 }];
+            const waterGems = [{ x: 6, z: -2 }, { x: -2, z: 6 }, { x: 3, z: -6 }];
+            
+            fireGems.forEach(g => { gems.push(new Gem(g.x, g.z, 'fire', 0xff6600)); });
+            waterGems.forEach(g => { gems.push(new Gem(g.x, g.z, 'water', 0x3399ff)); });
+            
+            // Botões
+            const button1 = new PressureButton(-6, -3, 0, [0]);
+            const button2 = new PressureButton(6, -3, 1, [1]);
+            const button3 = new PressureButton(0, 6, 2, [2]);
+            buttons = [button1, button2, button3];
+            
+            // Portas
+            const doorPositions = [
+                { x: -2, z: -7, buttonId: 0 }, { x: 2, z: -7, buttonId: 1 }, { x: 0, z: 7, buttonId: 2 }
+            ];
+            doorPositions.forEach(d => {
+                const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.5, 0.1), new THREE.MeshStandardMaterial({ color: 0xaa8866 }));
+                doorMesh.position.set(d.x, 0.75, d.z);
+                doorMesh.castShadow = true;
+                scene.add(doorMesh);
+                doors.push({ ...d, isOpen: false, mesh: doorMesh, size: 0.5 });
+            });
+            
+            // Inimigos
+            const enemyConfigs = [
+                { x: -3, z: -2, color: 0xcc3333, target: 'fire', speed: 1.3 },
+                { x: 3, z: -2, color: 0x3366cc, target: 'water', speed: 1.3 },
+                { x: 0, z: 4, color: 0xcc3333, target: 'fire', speed: 1.5 },
+                { x: -4, z: 3, color: 0x3366cc, target: 'water', speed: 1.4 }
+            ];
+            enemyConfigs.forEach(e => {
+                enemies.push(new Enemy(e.x, e.z, e.color, e.target, e.speed));
+            });
+            
+            // Portal
+            portal = {
+                x: 0, z: -8, active: false,
+                base: new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x442200 })),
+                ring: new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.08, 16, 48), new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0x442200 }))
+            };
+            portal.base.position.set(portal.x, 0.05, portal.z);
+            portal.ring.position.set(portal.x, 0.6, portal.z);
+            portal.ring.rotation.x = Math.PI / 2;
+            scene.add(portal.base, portal.ring);
+            
+            updateUI();
+        }
+        
+        // ========== UI ==========
+        function updateUI() {
+            if (fireCharacter) {
+                document.getElementById('fireHealth').innerHTML = fireCharacter.health;
+                document.getElementById('fireHealthFill').style.width = `${fireCharacter.health}%`;
+                document.getElementById('fireGems').innerHTML = fireCharacter.gems;
+            }
+            if (waterCharacter) {
+                document.getElementById('waterHealth').innerHTML = waterCharacter.health;
+                document.getElementById('waterHealthFill').style.width = `${waterCharacter.health}%`;
+                document.getElementById('waterGems').innerHTML = waterCharacter.gems;
+            }
+            
+            // Destacar personagem ativo
+            const fireCard = document.getElementById('fireCard');
+            const waterCard = document.getElementById('waterCard');
+            if (activeCharacter === 'fire') {
+                fireCard.classList.add('active');
+                waterCard.classList.remove('active');
+            } else {
+                waterCard.classList.add('active');
+                fireCard.classList.remove('active');
+            }
+            
+            // Verificar se portal deve abrir
+            const totalGems = fireCharacter.gems + waterCharacter.gems;
+            const totalPossible = gems.length;
+            if (totalGems >= totalPossible && !portal.active) {
+                portal.active = true;
+                portal.ring.material.color.setHex(0x44ff44);
+                portal.ring.material.emissiveIntensity = 0.8;
+                portal.base.material.emissiveIntensity = 0.5;
+                showMessage("✨ PORTAL ABERTO! VÁ ATÉ ELE! ✨", '#44ff44');
+            }
+        }
+        
+        function showMessage(text, color = '#ffd700') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message';
+            msgDiv.textContent = text;
+            msgDiv.style.borderColor = color;
+            msgDiv.style.color = color;
+            document.body.appendChild(msgDiv);
+            setTimeout(() => msgDiv.remove(), 2500);
+        }
+        
+        function completeLevel() {
+            if (levelComplete) return;
+            levelComplete = true;
+            gameActive = false;
+            showMessage(`🎉 NÍVEL ${currentLevel} COMPLETO! 🎉`, '#ffd700');
+            
+            for (let i = 0; i < 50; i++) {
+                const conf = document.createElement('div');
+                conf.style.position = 'absolute';
+                conf.style.width = '8px';
+                conf.style.height = '8px';
+                conf.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                conf.style.left = Math.random() * window.innerWidth + 'px';
+                conf.style.top = '-10px';
+                conf.style.pointerEvents = 'none';
+                document.body.appendChild(conf);
+                let y = 0;
+                const fall = () => { y += 6; conf.style.top = y + 'px'; if (y < window.innerHeight) requestAnimationFrame(fall); else conf.remove(); };
+                fall();
+            }
+            
+            setTimeout(() => {
+                currentLevel++;
+                if (currentLevel > 3) {
+                    showMessage("🏆 PARABÉNS! VOCÊ ZEROU O JOGO! 🏆", '#ffd700');
+                } else {
+                    resetGame();
+                }
+            }, 3000);
+        }
+        
+        function gameOver() {
+            gameActive = false;
+            const div = document.createElement('div');
+            div.className = 'game-over';
+            div.innerHTML = `<h1>💀 GAME OVER 💀</h1><p>Nível: ${currentLevel}</p><p>Tempo: ${document.getElementById('timer').innerHTML}</p><button onclick="location.reload()">🔁 JOGAR NOVAMENTE</button>`;
+            document.body.appendChild(div);
+        }
+        
+        function swapCharacter() {
+            if (!gameActive || levelComplete) return;
+            activeCharacter = activeCharacter === 'fire' ? 'water' : 'fire';
+            
+            // Atualizar luzes
+            fireLight.intensity = activeCharacter === 'fire' ? 0.8 : 0.3;
+            waterLight.intensity = activeCharacter === 'water' ? 0.8 : 0.3;
+            
+            updateUI();
+            showMessage(`🔄 Trocou para ${activeCharacter === 'fire' ? '🔥 FOGO' : '💧 ÁGUA'}`, '#ffd700');
+        }
+        
+        function resetGame() {
+            if (currentLevel > 3) currentLevel = 1;
+            gameActive = true;
+            levelComplete = false;
+            portal.active = false;
+            
+            buildLevel();
+            
+            if (fireCharacter) scene.remove(fireCharacter.mesh);
+            if (waterCharacter) scene.remove(waterCharacter.mesh);
+            
+            fireCharacter = new Character(-3, -3, 0xff6600, 'fire');
+            waterCharacter = new Character(3, -3, 0x3399ff, 'water');
+            fireCharacter.active = true;
+            activeCharacter = 'fire';
+            
+            updateUI();
+            showMessage(`🔄 Nível ${currentLevel} - Colete todas as gemas!`, '#ffd700');
+        }
+        
+        // ========== MOVIMENTO ==========
+        function getMovementInput() {
+            let moveX = 0, moveZ = 0;
+            if (useTouch) {
+                if (touchState.up) moveZ -= 1;
+                if (touchState.down) moveZ += 1;
+                if (touchState.left) moveX -= 1;
+                if (touchState.right) moveX += 1;
+            } else {
+                if (keys.up) moveZ -= 1;
+                if (keys.down) moveZ += 1;
+                if (keys.left) moveX -= 1;
+                if (keys.right) moveX += 1;
+            }
+            if (moveX !== 0 || moveZ !== 0) {
+                const len = Math.hypot(moveX, moveZ);
+                moveX /= len;
+                moveZ /= len;
+            }
+            return { moveX, moveZ };
+        }
+        
+        // ========== CÂMERA ==========
+        function updateCamera() {
+            const activeChar = activeCharacter === 'fire' ? fireCharacter : waterCharacter;
+            if (!activeChar) return;
+            const targetX = activeChar.x;
+            const targetZ = activeChar.z;
+            camera.position.x += (targetX - camera.position.x) * 0.08;
+            camera.position.z += (targetZ + 9 - camera.position.z) * 0.08;
+            camera.position.y += (8 - camera.position.y) * 0.05;
+            camera.lookAt(targetX, 0, targetZ);
+        }
+        
+        // ========== LOOP PRINCIPAL ==========
+        let lastTime = performance.now() / 1000;
+        
+        function animate() {
+            const now = performance.now() / 1000;
+            let delta = Math.min(0.033, now - lastTime);
+            if (delta <= 0) { lastTime = now; requestAnimationFrame(animate); return; }
+            lastTime = now;
+            
+            if (gameActive && !levelComplete && fireCharacter && waterCharacter) {
+                const { moveX, moveZ } = getMovementInput();
+                
+                // Atualizar personagem ativo
+                const activeChar = activeCharacter === 'fire' ? fireCharacter : waterCharacter;
+                const otherChar = activeCharacter === 'fire' ? waterCharacter : fireCharacter;
+                
+                activeChar.update(delta, moveX, moveZ, walls, doors, enemies, otherChar, lavaZones, waterZones, buttons, portal);
+                
+                // Verificar morte
+                if (fireCharacter.health <= 0 || waterCharacter.health <= 0) {
+                    gameOver();
+                }
+                
+                // Atualizar inimigos
+                enemies.forEach(enemy => {
+                    let target = null;
+                    if (enemy.targetType === 'fire' && fireCharacter.health > 0) target = fireCharacter;
+                    else if (enemy.targetType === 'water' && waterCharacter.health > 0) target = waterCharacter;
+                    if (target) {
+                        enemy.update(target.getPosition(), delta, currentLevel);
+                        const dist = Math.hypot(enemy.x - target.x, enemy.z - target.z);
+                        if (dist < 0.7 && target === activeChar) {
+                            target.takeDamage(10 + (currentLevel - 1) * 5);
+                            updateUI();
+                        }
+                    }
+                });
+                
+                updateCamera();
+            }
+            
+            // Animações
+            fireLight.position.set(fireCharacter?.x || 0, 1, fireCharacter?.z || 0);
+            waterLight.position.set(waterCharacter?.x || 0, 1, waterCharacter?.z || 0);
+            portal.ring.rotation.z += 0.02;
+            
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        // ========== CRONOMETRO ==========
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (gameActive && !levelComplete) {
+                    gameTime++;
+                    const mins = Math.floor(gameTime / 60);
+                    const secs = gameTime % 60;
+                    document.getElementById('timer').innerHTML = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+        
+        // ========== CONTROLES ==========
+        function initControls() {
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                const key = e.key;
+                if (key === 'ArrowUp' || key === 'w' || key === 'W') keys.up = true;
+                if (key === 'ArrowDown' || key === 's' || key === 'S') keys.down = true;
+                if (key === 'ArrowLeft' || key === 'a' || key === 'A') keys.left = true;
+                if (key === 'ArrowRight' || key === 'd' || key === 'D') keys.right = true;
+                if (key === 'Tab') { e.preventDefault(); swapCharacter(); }
+                if (key === 'r' || key === 'R') resetGame();
+                useTouch = false;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                const key = e.key;
+                if (key === 'ArrowUp' || key === 'w' || key === 'W') keys.up = false;
+                if (key === 'ArrowDown' || key === 's' || key === 'S') keys.down = false;
+                if (key === 'ArrowLeft' || key === 'a' || key === 'A') keys.left = false;
+                if (key === 'ArrowRight' || key === 'd' || key === 'D') keys.right = false;
+            });
+            
+            // Touch
+            if (isMobile) {
+                useTouch = true;
+                const btnUp = document.getElementById('btnUp');
+                const btnDown = document.getElementById('btnDown');
+                const btnLeft = document.getElementById('btnLeft');
+                const btnRight = document.getElementById('btnRight');
+                
+                btnUp.addEventListener('touchstart', (e) => { e.preventDefault(); touchState.up = true; });
+                btnUp.addEventListener('touchend', () => touchState.up = false);
+                btnDown.addEventListener('touchstart', (e) => { e.preventDefault(); touchState.down = true; });
+                btnDown.addEventListener('touchend', () => touchState.down = false);
+                btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); touchState.left = true; });
+                btnLeft.addEventListener('touchend', () => touchState.left = false);
+                btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); touchState.right = true; });
+                btnRight.addEventListener('touchend', () => touchState.right = false);
+            }
+            
+            document.getElementById('swapBtn').addEventListener('click', swapCharacter);
+        }
+        
+        // ========== INICIAR ==========
+        function init() {
+            buildLevel();
+            fireCharacter = new Character(-3, -3, 0xff6600, 'fire');
+            waterCharacter = new Character(3, -3, 0x3399ff, 'water');
+            activeCharacter = 'fire';
+            
+            initControls();
+            startTimer();
+            
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('ui').style.display = 'block';
+                showMessage(isMobile ? "👆 Toque nos botões! 🔥 TAB troca personagem" : "🎮 WASD mover | TAB troca personagem", '#ffd700');
+            }, 1500);
+            
+            animate();
+        }
+        
+        init();
+        
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
